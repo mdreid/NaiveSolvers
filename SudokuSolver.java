@@ -88,6 +88,58 @@ public class SudokuSolver {
         }
         System.out.print("\n");
     }
+
+    private static boolean checkSolution(int[][] startBoard, int[][] finalBoard) {
+        // check that we didn't change what was given to us
+        for (int i = 0; i < startBoard.length; i++) {
+            for (int j = 0; j < startBoard.length; j++) {
+                if (startBoard[i][j] != 0 && startBoard[i][j] != finalBoard[i][j]) {
+                    System.out.println("Error: Changed an initial value");
+                    return false;
+                }
+                if (finalBoard[i][j] == 0) {
+                    return false;
+                }
+            }
+        }
+
+        // check rows and cols
+        int sz = startBoard.length;
+        for (int i = 0; i < startBoard.length; i++) {
+            boolean[] visitedRow = new boolean[sz +1];
+            boolean[] visitedCol = new boolean[sz +1];
+            for (int j = 0; j < startBoard.length; j++) {
+                int v = finalBoard[i][j];
+                int t = finalBoard[j][i];
+                if (visitedRow[v] || visitedCol[t]) {
+                    System.out.println("Error: Duplicate in row or col");
+                    return false;
+                }
+                visitedRow[v] = true;
+                visitedCol[t] = true;
+            }
+        }
+
+        // check Boxes
+        for (int i = 0; i < sz; i = i+3) {
+            for (int j = 0; j < sz; j = j+3) {
+                // check the box starting at (i, j)
+                boolean[] visited = new boolean[sz+ 1];
+                for (int row = i; row < i+3; row++) {
+                    for (int col = j; col < j+3; col++) {
+                        int v = finalBoard[row][col];
+                        if (visited[v]) {
+                            System.out.format("Error: Duplicate in box starting at (%d,%d)\n", i, j);
+                            return false;
+                        }
+                        visited[v] = true;
+                    }
+                }
+            }
+        }        
+        return true;
+
+    }
     
     public static void main(String[] args) {
         if (args.length != 1) {
@@ -103,20 +155,23 @@ public class SudokuSolver {
         }
         
         int[][] board = new int[9][9];
+        int[][] solvedBoard = new int[9][9];
         
         try {
             for (int i = 0; i < 9; i++) {
                 String row = reader.readLine();
                 String[] entries = row.split(",");
                 for (int j = 0; j < entries.length; j++) {
-                    board[i][j] = Integer.parseInt(entries[j]);
+                    int v = Integer.parseInt(entries[j]);
+                    board[i][j] = v;
+                    solvedBoard[i][j] = v;
                 }
             }        
         } catch (IOException e) {
             e.printStackTrace();
         }
         printBoard(board);
-        System.out.println("Solved? " + solveSudoku(0, 0, board));
-        printBoard(board);
+        System.out.println("Solved? " + (solveSudoku(0, 0, solvedBoard) && checkSolution(board, solvedBoard)));
+        printBoard(solvedBoard);
     }
 }
